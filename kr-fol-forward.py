@@ -24,15 +24,26 @@ class KnowledgeBase:
         while new_facts_added:
             new_facts_added = False
             for condition, conclusion in self.rules:
-                # Check if all predicates in the condition are satisfied
-                if all(pred in self.facts and tuple(args) in self.facts[pred] for pred, args in condition):
-                    # Add the conclusion as a new fact
-                    predicate, args = conclusion
-                    if predicate not in self.facts:
-                        self.facts[predicate] = set()
-                    if tuple(args) not in self.facts[predicate]:
-                        self.facts[predicate].add(tuple(args))
-                        new_facts_added = True
+                # The condition of the rule has variables (e.g., 'x')
+                rule_predicate, rule_arg_list = condition[0]
+                rule_variable = rule_arg_list[0]
+                
+                # Check for facts that match the rule's predicate (e.g., "Mammal")
+                if rule_predicate in self.facts:
+                    for fact_tuple in self.facts[rule_predicate]:
+                        # The fact is a tuple (e.g., ("cat",))
+                        fact_arg = fact_tuple[0]
+                        
+                        # Now, apply the substitution.
+                        # The conclusion also has the same variable.
+                        # We replace the variable with the concrete fact.
+                        conclusion_predicate, conclusion_arg_list = conclusion
+                        new_fact_args = [fact_arg if arg == rule_variable else arg for arg in conclusion_arg_list]
+                        
+                        # Check if this new fact is already in our knowledge base
+                        if tuple(new_fact_args) not in self.facts.get(conclusion_predicate, set()):
+                            self.add_fact(conclusion_predicate, new_fact_args)
+                            new_facts_added = True
 
     def query(self, predicate, arguments):
         """Check if a predicate with given arguments is true."""
